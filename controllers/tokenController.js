@@ -7,42 +7,45 @@ import requestIp from 'request-ip';
 export const addToken = async (req, res) => {
   try {
     const {
-      name, symbol, description,
-      chain, launchStatus, website,
-      dextoolsLink, exchangeUrl
+      name,
+      symbol,
+      network,
+      description,
+      website,
+      telegram,
+      twitter,
+      discord,
+      dextoolsLink,
+      presaleLink,
+      auditLink,
+      kycLink,
     } = req.body;
 
-    const logo = req.file ? req.file.filename : null;
-
-    // Get live price from Dextools link
-    let livePrice = null;
-    if (dextoolsLink) {
-      livePrice = await fetchLivePriceFromDextools(dextoolsLink);
-    }
+    const logo = req.file?.filename;
 
     const newToken = new Token({
       name,
       symbol,
+      network,
       description,
-      chain,
-      launchStatus,
       website,
+      telegram,
+      twitter,
+      discord,
       dextoolsLink,
-      exchangeUrl,
-      logo
+      presaleLink,
+      auditLink,
+      kycLink,
+      logo,
+      submittedAt: new Date(),
     });
 
-    // Save token
     await newToken.save();
 
-    // Return with price
-    res.status(201).json({
-      message: 'Token submitted successfully!',
-      token: newToken,
-      livePrice: livePrice
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Something went wrong while submitting the token.' });
+    res.status(201).json({ message: 'Token submitted successfully' });
+  } catch (err) {
+    console.error('Submit Error:', err);
+    res.status(500).json({ error: 'Failed to fetch token.' });
   }
 };
 
