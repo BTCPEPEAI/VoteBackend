@@ -9,53 +9,74 @@ export const addToken = async (req, res) => {
     const {
       name,
       symbol,
-      network,
+      chain,
+      contract,
       description,
+      launchDate,
+      totalSupply,
+      launchStatus,
+      tags,
       website,
       telegram,
       twitter,
       discord,
+      whitepaper,
+      github,
       dextoolsLink,
-      presaleLink,
-      auditLink,
-      kycLink,
+      exchangeUrl
     } = req.body;
 
-    const logo = req.file?.filename;
+    // Convert tags if needed (handle tags[] or tags string)
+    const tagArray = Array.isArray(tags)
+      ? tags
+      : typeof tags === 'string'
+        ? [tags]
+        : [];
 
-  // Optional: safe fetch of live price
+    const logo = req.file ? req.file.filename : null;
+
+    // Optional price fetch
     let livePrice = null;
     if (dextoolsLink) {
       try {
         livePrice = await fetchLivePriceFromDextools(dextoolsLink);
       } catch (e) {
-        console.warn('Price fetch failed:', e.message);
+        console.warn("Price fetch failed:", e.message);
       }
     }
 
     const newToken = new Token({
       name,
       symbol,
-      network,
+      chain,
+      contract,
       description,
+      launchDate,
+      totalSupply,
+      launchStatus,
+      tags: tagArray,
       website,
       telegram,
       twitter,
       discord,
+      whitepaper,
+      github,
       dextoolsLink,
-      presaleLink,
-      auditLink,
-      kycLink,
+      exchangeUrl,
       logo,
-      submittedAt: new Date(),
+      livePrice
     });
 
     await newToken.save();
 
-    res.status(201).json({ message: 'Token submitted successfully' });
-  } catch (err) {
-    console.error('Submit Error:', err);
-    res.status(500).json({ error: 'Failed to fetch token.' });
+    res.status(201).json({
+      message: "Token submitted successfully!",
+      token: newToken,
+      livePrice
+    });
+  } catch (error) {
+    console.error("🔴 Submit Error:", error.message, error);
+    res.status(500).json({ error: error.message || "Failed to submit token." });
   }
 };
 
