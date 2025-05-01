@@ -23,6 +23,16 @@ export const addToken = async (req, res) => {
 
     const logo = req.file?.filename;
 
+  // Optional: safe fetch of live price
+    let livePrice = null;
+    if (dextoolsLink) {
+      try {
+        livePrice = await fetchLivePriceFromDextools(dextoolsLink);
+      } catch (e) {
+        console.warn('Price fetch failed:', e.message);
+      }
+    }
+
     const newToken = new Token({
       name,
       symbol,
