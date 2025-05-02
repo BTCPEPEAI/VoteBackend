@@ -1,6 +1,6 @@
 // controllers/tokenController.js
 import Token from '../models/Token.js';
-import { fetchLivePriceFromDextools } from '../utils/fetchPrice.js';
+import { fetchLivePriceAndChart } from '../utils/fetchPrice.js';
 import VoteLog from '../models/VoteLog.js';
 import requestIp from 'request-ip';
 
@@ -36,19 +36,15 @@ export const addToken = async (req, res) => {
     const logo = req.file ? req.file.filename : null;
 
     // Initialize live price & chart
-    let livePrice = null;
-    let embedChartLink = null;
+   let livePrice = null;
+let chartEmbed = null;
 
-    // 🧠 Extract dextools chart link and price if available
-  if (dextoolsLink && dextoolsLink.includes("dextools.io")) {
-  try {
-    const result = await fetchLivePriceFromDextools(dextoolsLink);
-    livePrice = result.price;
-    embedChartLink = result.chartEmbed;
-  } catch (err) {
-    console.warn("⚠️ Failed to fetch dextools data:", err.message);
-  }
+if (dextoolsLink) {
+  const result = await fetchLivePriceAndChart(dextoolsLink);
+  livePrice = result.price;
+  chartEmbed = result.chartEmbed;
 }
+
 
 
     // Create new token
@@ -70,7 +66,7 @@ export const addToken = async (req, res) => {
       github,
       dextoolsLink,
       exchangeUrl,
-      logo,
+      logo: req.file?.filename || null,
       livePrice,
       chartEmbed: embedChartLink,
       submittedAt: new Date()
