@@ -1,11 +1,9 @@
-// config/multer.js
 import multer from 'multer';
 import path from 'path';
 
-// Save logo in /uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/');
+    cb(null, 'uploads/'); // Temporary storage
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + '-' + file.originalname);
