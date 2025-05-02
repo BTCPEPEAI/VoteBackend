@@ -35,15 +35,18 @@ export const addToken = async (req, res) => {
 
     const logo = req.file ? req.file.filename : null;
 
-    // Optional price fetch
-    let livePrice = null;
-    if (dextoolsLink) {
-      try {
-        livePrice = await fetchLivePriceFromDextools(dextoolsLink);
-      } catch (e) {
-        console.warn("Price fetch failed:", e.message);
+ let embedChartLink = null;
+
+    if (dextoolsLink && dextoolsLink.includes("dextools.io")) {
+      // Try to extract chain and pair from the URL
+      const match = dextoolsLink.match(/\/(ether|bsc|polygon|avalanche|arbitrum|optimism)\/pair-explorer\/(0x[a-fA-F0-9]+)/);
+      if (match) {
+        const chain = match[1];
+        const pair = match[2];
+        embedChartLink = `https://www.dextools.io/widget/pair-explorer?chain=${chain}&pair=${pair}`;
       }
-    }
+    }    
+
 
     const newToken = new Token({
       name,
@@ -64,7 +67,8 @@ export const addToken = async (req, res) => {
       dextoolsLink,
       exchangeUrl,
       logo,
-      livePrice
+      livePrice,
+      embedChartLink
     });
 
     await newToken.save();
