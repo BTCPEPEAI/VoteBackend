@@ -1,6 +1,6 @@
 // controllers/tokenController.js
 import Token from '../models/Token.js';
-import { fetchLivePriceFromDextools } from '../utils/fetchPrice.js';
+import { fetchLivePriceAndChart } from '../utils/fetchPrice.js';
 import VoteLog from '../models/VoteLog.js';
 import requestIp from 'request-ip';
 
@@ -36,25 +36,15 @@ export const addToken = async (req, res) => {
     const logo = req.file ? req.file.filename : null;
 
     // Initialize live price & chart
-    let livePrice = null;
-    let embedChartLink = null;
-
-    // 🧠 Extract dextools chart link and price if available
-    if (dextoolsLink && dextoolsLink.includes("dextools.io")) {
-      const match = dextoolsLink.match(/\/(ether|bsc|polygon|avalanche|arbitrum|optimism)\/pair-explorer\/(0x[a-fA-F0-9]+)/);
-      if (match) {
-        const chain = match[1];
-        const pair = match[2];
-        embedChartLink = `https://www.dextools.io/widget/pair-explorer?chain=${chain}&pair=${pair}`;
-      }
-
-      // Fetch live price using Cheerio
-      try {
-        livePrice = await fetchLivePriceFromDextools(dextoolsLink);
-      } catch (err) {
-        console.warn("⚠️ Failed to fetch price:", err.message);
-      }
-    }
+     let livePrice = null;
+ let chartEmbed = null;
+ 
+ if (dextoolsLink) {
+   const result = await fetchLivePriceAndChart(dextoolsLink);
+   livePrice = result.price;
+   chartEmbed = result.chartEmbed;
+ }
+ 
 
     // Create new token
     const newToken = new Token({
@@ -75,9 +65,9 @@ export const addToken = async (req, res) => {
       github,
       dextoolsLink,
       exchangeUrl,
-      logo,
+      logo: req.file?.filename || null,
       livePrice,
-      chartEmbed: embedChartLink,
+       chartEmbed: chartEmbed, // ✅ CORRECT
       submittedAt: new Date()
     });
 
