@@ -26,7 +26,7 @@ export const addToken = async (req, res) => {
       exchangeUrl
     } = req.body;
 
-    // Convert tags if needed (handle tags[] or tags string)
+    // Convert tags (can come as string or array)
     const tagArray = Array.isArray(tags)
       ? tags
       : typeof tags === 'string'
@@ -35,19 +35,28 @@ export const addToken = async (req, res) => {
 
     const logo = req.file ? req.file.filename : null;
 
- let embedChartLink = null;
+    // Initialize live price & chart
+    let livePrice = null;
+    let embedChartLink = null;
 
+    // 🧠 Extract dextools chart link and price if available
     if (dextoolsLink && dextoolsLink.includes("dextools.io")) {
-      // Try to extract chain and pair from the URL
       const match = dextoolsLink.match(/\/(ether|bsc|polygon|avalanche|arbitrum|optimism)\/pair-explorer\/(0x[a-fA-F0-9]+)/);
       if (match) {
         const chain = match[1];
         const pair = match[2];
         embedChartLink = `https://www.dextools.io/widget/pair-explorer?chain=${chain}&pair=${pair}`;
       }
-    }    
 
+      // Fetch live price using Cheerio
+      try {
+        livePrice = await fetchLivePriceFromDextools(dextoolsLink);
+      } catch (err) {
+        console.warn("⚠️ Failed to fetch price:", err.message);
+      }
+    }
 
+    // Create new token
     const newToken = new Token({
       name,
       symbol,
@@ -68,7 +77,8 @@ export const addToken = async (req, res) => {
       exchangeUrl,
       logo,
       livePrice,
-      embedChartLink
+      chartEmbed: embedChartLink,
+      submittedAt: new Date()
     });
 
     await newToken.save();
@@ -78,6 +88,7 @@ export const addToken = async (req, res) => {
       token: newToken,
       livePrice
     });
+
   } catch (error) {
     console.error("🔴 Submit Error:", error.message, error);
     res.status(500).json({ error: error.message || "Failed to submit token." });
