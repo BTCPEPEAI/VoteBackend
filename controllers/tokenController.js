@@ -2,7 +2,9 @@
 import Token from '../models/Token.js';
 import { fetchLivePriceAndChart } from '../utils/fetchPrice.js';
 import VoteLog from '../models/VoteLog.js';
+import cloudinary from '../utils/cloudinary.js';
 import requestIp from 'request-ip';
+import fs from 'fs';
 
 export const addToken = async (req, res) => {
   try {
@@ -26,25 +28,24 @@ export const addToken = async (req, res) => {
       exchangeUrl
     } = req.body;
 
-    // Convert tags (can come as string or array)
     const tagArray = Array.isArray(tags)
       ? tags
       : typeof tags === 'string'
         ? [tags]
         : [];
 
+    let logoUrl = '';
 
-    // Initialize live price & chart
-  let livePrice = null;
-  let chartEmbed = null;
-  
-  if (dextoolsLink) {
-    const result = await fetchLivePriceAndChart(dextoolsLink);
-    livePrice = result.price;
-    chartEmbed = result.chartEmbed;
-  }
+    if (req.file?.path) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'tokens'
+      });
 
-    // Create new token
+      logoUrl = result.secure_url;
+
+      fs.unlinkSync(req.file.path); // Remove temp file
+    }
+
     const newToken = new Token({
       name,
       symbol,
@@ -63,9 +64,7 @@ export const addToken = async (req, res) => {
       github,
       dextoolsLink,
       exchangeUrl,
-      logo: req.file?.path || null,
-      livePrice,
-      chartEmbed: chartEmbed, // ✅ CORRECT
+      logo: logoUrl,
       submittedAt: new Date()
     });
 
@@ -73,8 +72,7 @@ export const addToken = async (req, res) => {
 
     res.status(201).json({
       message: "Token submitted successfully!",
-      token: newToken,
-      livePrice
+      token: newToken
     });
 
   } catch (error) {
