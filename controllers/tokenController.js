@@ -1,6 +1,6 @@
 // controllers/tokenController.js
 import Token from '../models/Token.js';
-import { fetchLivePriceAndChart } from '../utils/fetchPrice.js';
+import { fetchLivePriceFromDextools } from '../utils/fetchPrice.js';
 import VoteLog from '../models/VoteLog.js';
 import requestIp from 'request-ip';
 
@@ -36,16 +36,25 @@ export const addToken = async (req, res) => {
     const logo = req.file ? req.file.filename : null;
 
     // Initialize live price & chart
-   let livePrice = null;
-let chartEmbed = null;
+    let livePrice = null;
+    let embedChartLink = null;
 
-if (dextoolsLink) {
-  const result = await fetchLivePriceAndChart(dextoolsLink);
-  livePrice = result.price;
-  chartEmbed = result.chartEmbed;
-}
+    // 🧠 Extract dextools chart link and price if available
+    if (dextoolsLink && dextoolsLink.includes("dextools.io")) {
+      const match = dextoolsLink.match(/\/(ether|bsc|polygon|avalanche|arbitrum|optimism)\/pair-explorer\/(0x[a-fA-F0-9]+)/);
+      if (match) {
+        const chain = match[1];
+        const pair = match[2];
+        embedChartLink = `https://www.dextools.io/widget/pair-explorer?chain=${chain}&pair=${pair}`;
+      }
 
-
+      // Fetch live price using Cheerio
+      try {
+        livePrice = await fetchLivePriceFromDextools(dextoolsLink);
+      } catch (err) {
+        console.warn("⚠️ Failed to fetch price:", err.message);
+      }
+    }
 
     // Create new token
     const newToken = new Token({
@@ -66,9 +75,9 @@ if (dextoolsLink) {
       github,
       dextoolsLink,
       exchangeUrl,
-      logo: req.file?.filename || null,
+      logo,
       livePrice,
-     chartEmbed: chartEmbed, // ✅ CORRECT
+      chartEmbed: embedChartLink,
       submittedAt: new Date()
     });
 
@@ -89,12 +98,23 @@ if (dextoolsLink) {
 // Get all tokens
 export const getAllTokens = async (req, res) => {
   try {
-    const tokens = await Token.find().sort({ createdAt: -1 }); // newest first
+    const { sort = 'votes', status = 'all' } = req.query;
+
+    const sortOptions = {
+      votes: { votes: -1 },
+      recent: { submittedAt: -1 },
+      boosts: { boosts: -1 }
+    };
+
+    const filter = status === 'all' ? {} : { launchStatus: status };
+
+    const tokens = await Token.find(filter).sort(sortOptions[sort] || sortOptions.votes);
     res.status(200).json(tokens);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch tokens.' });
   }
 };
+
 
 // Vote for a token
 export const voteForToken = async (req, res) => {
