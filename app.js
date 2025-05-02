@@ -27,6 +27,7 @@ mongoose.connect(process.env.MONGO_URI, {
 app.use('/api/tokens', tokenRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/newsletter', newsletterRoutes);
+app.use('/uploads', express.static('uploads'));
 
 // Start server
 const PORT = process.env.PORT || 5000;
