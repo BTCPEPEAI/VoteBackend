@@ -1,21 +1,23 @@
-// utils/fetchPrice.js
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 
+// Converts a normal URL to an embed chart link and tries to fetch live price
 export const fetchLivePriceAndChart = async (url) => {
   try {
-    let price = null;
     let chartEmbed = null;
+    let price = null;
 
     if (url.includes('geckoterminal.com')) {
-      // GeckoTerminal URL (e.g., https://www.geckoterminal.com/solana/pools/xyz123)
-      const match = url.match(/geckoterminal\.com\/[^/]+\/pools\/([^/?#]+)/);
+      // Extract pool ID from GeckoTerminal URL
+      const match = url.match(/\/pools\/([a-zA-Z0-9]+)/);
       if (match && match[1]) {
-        chartEmbed = `https://www.geckoterminal.com/embed/pools/${match[1]}`;
+        const poolId = match[1];
+        chartEmbed = `https://www.geckoterminal.com/embed/pools/${poolId}`;
       }
-      // GeckoTerminal doesn’t expose price directly via scraping, so we return only chartEmbed
-    } else if (url.includes('dextools.io')) {
-      // Dextools URL
+      // Optional: You can try fetch price via GeckoTerminal API here later
+    }
+
+    else if (url.includes('dextools.io')) {
       const response = await axios.get(url);
       const html = response.data;
       const $ = cheerio.load(html);
@@ -26,10 +28,11 @@ export const fetchLivePriceAndChart = async (url) => {
 
     return {
       price: price || null,
-      chartEmbed: chartEmbed || null
+      chartEmbed: chartEmbed || null,
     };
+
   } catch (error) {
-    console.error('Error fetching price/chart data:', error.message);
+    console.error('Error fetching price/chart:', error.message);
     return { price: null, chartEmbed: null };
   }
 };
