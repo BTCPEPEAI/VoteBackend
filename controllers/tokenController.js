@@ -40,21 +40,16 @@ export const addToken = async (req, res) => {
     let embedChartLink = null;
 
     // 🧠 Extract dextools chart link and price if available
-    if (dextoolsLink && dextoolsLink.includes("dextools.io")) {
-      const match = dextoolsLink.match(/\/(ether|bsc|polygon|avalanche|arbitrum|optimism)\/pair-explorer\/(0x[a-fA-F0-9]+)/);
-      if (match) {
-        const chain = match[1];
-        const pair = match[2];
-        embedChartLink = `https://www.dextools.io/widget/pair-explorer?chain=${chain}&pair=${pair}`;
-      }
+  if (dextoolsLink && dextoolsLink.includes("dextools.io")) {
+  try {
+    const result = await fetchLivePriceFromDextools(dextoolsLink);
+    livePrice = result.price;
+    embedChartLink = result.chartEmbed;
+  } catch (err) {
+    console.warn("⚠️ Failed to fetch dextools data:", err.message);
+  }
+}
 
-      // Fetch live price using Cheerio
-      try {
-        livePrice = await fetchLivePriceFromDextools(dextoolsLink);
-      } catch (err) {
-        console.warn("⚠️ Failed to fetch price:", err.message);
-      }
-    }
 
     // Create new token
     const newToken = new Token({
