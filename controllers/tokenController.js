@@ -33,8 +33,6 @@ export const addToken = async (req, res) => {
         ? [tags]
         : [];
 
-        const logo = req.file ? req.file.path : null;
-
 
     // Initialize live price & chart
   let livePrice = null;
@@ -65,7 +63,7 @@ export const addToken = async (req, res) => {
       github,
       dextoolsLink,
       exchangeUrl,
-      logo: req.file?.filename || null,
+      logo: req.file?.path || null,
       livePrice,
       chartEmbed: chartEmbed, // ✅ CORRECT
       submittedAt: new Date()
