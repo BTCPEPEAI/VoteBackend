@@ -68,7 +68,7 @@ if (dextoolsLink) {
       exchangeUrl,
       logo: req.file?.filename || null,
       livePrice,
-      chartEmbed: embedChartLink,
+     chartEmbed: chartEmbed, // ✅ CORRECT
       submittedAt: new Date()
     });
 
