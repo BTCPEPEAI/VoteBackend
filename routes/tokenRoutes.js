@@ -8,6 +8,7 @@ import {
     getTokenById,
     setFeatured,
     setTrending,
+    setPromoted,
     getAdminTokens,
     deleteToken,
     getFeaturedTokens,
@@ -36,6 +37,7 @@ router.get('/:id', getTokenById);
 // Admin: set featured/trending
 router.post('/:id/featured', setFeatured);   // body: { status: true/false }
 router.post('/:id/trending', setTrending);   // body: { status: true/false }
+router.post('/:id/promoted', setPromoted);
 router.get('/admin/list', getAdminTokens);
 router.get('/featured/list', getFeaturedTokens);
 router.get('/trending/list', getTrendingTokens);
