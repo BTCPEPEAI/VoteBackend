@@ -235,10 +235,11 @@ export const deleteToken = async (req, res) => {
   }
 };
 
-export const searchTokens = async (req, res) => {
+exports.searchTokens = async (req, res) => {
   try {
-    const query = req.query.q;
+    console.log('🔍 Search triggered with query:', req.query.q); // ADD THIS
 
+    const query = req.query.q;
     if (!query || query.trim() === '') {
       return res.status(400).json({ error: 'Query parameter is required.' });
     }
@@ -250,7 +251,7 @@ export const searchTokens = async (req, res) => {
       ]
     })
       .limit(10)
-      .select('name symbol chain logo'); // only return necessary fields
+      .select('name symbol chain logo');
 
     res.status(200).json(tokens);
   } catch (error) {
