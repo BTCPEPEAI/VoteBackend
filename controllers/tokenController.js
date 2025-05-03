@@ -202,9 +202,10 @@ export const getTrendingTokens = async (req, res) => {
 };
 
 export const getPromotedTokens = async (req, res) => {
-  const tokens = await Token.find({ isTrending: true });
+  const tokens = await Token.find({ isPromoted: true });
   res.status(200).json(tokens);
 };
+
 
 // Admin: Get all tokens (optional filters)
 export const getAdminTokens = async (req, res) => {
