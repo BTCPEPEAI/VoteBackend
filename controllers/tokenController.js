@@ -145,10 +145,8 @@ export const getTokenById = async (req, res) => {
   }
 };
 
-// Set featured status and date range
-// controllers/tokenController.js
 
-// Assuming you're using Mongoose and Token model is already imported
+
 const updateTokenStatus = async (req, res, type) => {
   try {
     const { id } = req.params;
@@ -159,13 +157,10 @@ const updateTokenStatus = async (req, res, type) => {
     }
 
     const updateData = {
-      [`is${type}`]: status,
-      [type.toLowerCase()]: {
-        status,
-        startDate,
-        endDate,
-        position,
-      }
+      [`${type.toLowerCase()}.status`]: status,
+      [`${type.toLowerCase()}.startDate`]: startDate,
+      [`${type.toLowerCase()}.endDate`]: endDate,
+      [`${type.toLowerCase()}.position`]: position,
     };
 
     const updatedToken = await Token.findByIdAndUpdate(id, updateData, { new: true });
@@ -184,7 +179,7 @@ const updateTokenStatus = async (req, res, type) => {
   }
 };
 
-// Controller functions using the shared helper
+// Export controller functions for routes
 export const setTrending = (req, res) => updateTokenStatus(req, res, 'Trending');
 export const setFeatured = (req, res) => updateTokenStatus(req, res, 'Featured');
 export const setPromoted = (req, res) => updateTokenStatus(req, res, 'Promoted');
