@@ -1,53 +1,58 @@
-// routes/tokenRoutes.js
 import express from 'express';
-import upload from '../config/multer.js';
+import multer from 'multer';
 import {
-    addToken,
-    getAllTokens,
-    voteForToken,
-    getTokenById,
-    setFeatured,
-    setTrending,
-    setPromoted,
-    getAdminTokens,
-    deleteToken,
-    addTrendingToken,
-    addFeaturedToken,
-    addPromotedToken,
-    searchTokens,
-    getLeaderboard,
-    boostToken,
-    getHomepageTokens,
-    updateTokenAnalytics
-  } from '../controllers/tokenController.js';
-  
+  addToken,
+  getAllTokens,
+  getTokenById,
+  voteForToken,
+  boostToken,
+  getLeaderboard,
+  searchTokens,
+  deleteToken,
+  addFeaturedToken,
+  addTrendingToken,
+  addPromotedToken,
+  getHomepageTokens,
+  updateTokenAnalytics
+} from '../controllers/tokenController.js';
 
 const router = express.Router();
 
-// POST /api/tokens/submit
-router.post('/submit', upload.single('logo'), addToken);
+// File upload config (temp storage, passed to Cloudinary later)
+const storage = multer.diskStorage({});
+const upload = multer({ storage });
 
-// Get all tokens
+/** --------------------
+ *  TOKEN CRUD ROUTES
+ --------------------- */
+router.post('/add', upload.single('logo'), addToken);
 router.get('/all', getAllTokens);
-
-
-router.post('/:id/vote', voteForToken);
-
 router.get('/:id', getTokenById);
-
-// Admin: set featured/trending
-router.post('/:id/trending', addTrendingToken);
-router.post('/:id/featured', addFeaturedToken);
-router.post('/:id/promoted', addPromotedToken);
-router.get('/admin/list', getAdminTokens);
-router.get('/featured/list', getFeaturedTokens);
-router.get('/trending/list', getTrendingTokens);
 router.delete('/:id', deleteToken);
+
+/** --------------------
+ *  VOTING & BOOSTING
+ --------------------- */
+router.post('/vote/:id', voteForToken);
+router.post('/boost/:id', boostToken);
+
+/** --------------------
+ *  SPECIAL STATUSES
+ --------------------- */
+router.post('/feature/:id', addFeaturedToken);
+router.post('/trending/:id', addTrendingToken);
+router.post('/promote/:id', addPromotedToken);
+
+/** --------------------
+ *  SEARCH & LEADERBOARD
+ --------------------- */
 router.get('/search', searchTokens);
 router.get('/leaderboard', getLeaderboard);
-router.post('/:id/boost', boostToken);
-router.get('/homepage', getHomepageTokens);
-router.post('/:id/analytics', updateTokenAnalytics);
 
+/** --------------------
+ *  HOMEPAGE + ANALYTICS
+ --------------------- */
+router.get('/homepage', getHomepageTokens);
+router.post('/analytics/:id', updateTokenAnalytics);
 
 export default router;
