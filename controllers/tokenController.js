@@ -260,7 +260,7 @@ export const searchTokens = async (req, res) => {
   }
 };
 
-export const tokenController = async searchTokens(req, res) {
+export const tokenController = async (req, res) {
     try {
       const query = req.query.q || '';
       const regex = new RegExp(query, 'i');
