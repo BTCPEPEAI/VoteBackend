@@ -150,72 +150,127 @@ export const getTokenById = async (req, res) => {
 
 // Assuming you're using Mongoose and Token model is already imported
 
-export const addTrendingToken = async (req, res) => {
+export const setTrending = async (req, res) => {
   try {
     const { id } = req.params;
     const { status, startDate, endDate, position } = req.body;
 
-    const token = await Token.findById(id);
-    if (!token) return res.status(404).json({ error: "Token not found" });
+    if (!id || position === undefined) {
+      return res.status(400).json({ message: "Missing required fields." });
+    }
 
-    token.trending = {
-      status,
-      startDate,
-      endDate,
-      position,
-    };
+    const updatedToken = await Token.findByIdAndUpdate(id, {
+      isTrending: status,
+      trending: {
+        status,
+        startDate,
+        endDate,
+        position,
+      },
+    }, { new: true });
 
-    await token.save();
-    res.status(200).json({ message: "Trending status updated", token });
+    if (!updatedToken) {
+      return res.status(404).json({ message: "Token not found." });
+    }
+
+    res.status(200).json({ message: "Trending status updated.", token: updatedToken });
   } catch (error) {
-    console.error("addTrendingToken error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error setting trending status:", error);
+    res.status(500).json({ message: "Server error while setting trending status." });
   }
 };
 
-export const addFeaturedToken = async (req, res) => {
+export const setFeatured = async (req, res) => {
   try {
     const { id } = req.params;
     const { status, startDate, endDate, position } = req.body;
 
-    const token = await Token.findById(id);
-    if (!token) return res.status(404).json({ error: "Token not found" });
+    if (!id || position === undefined) {
+      return res.status(400).json({ message: "Missing required fields." });
+    }
 
-    token.featured = {
-      status,
-      startDate,
-      endDate,
-      position,
-    };
+    const updatedToken = await Token.findByIdAndUpdate(id, {
+      isFeatured: status,
+      featured: {
+        status,
+        startDate,
+        endDate,
+        position,
+      },
+    }, { new: true });
 
-    await token.save();
-    res.status(200).json({ message: "Featured status updated", token });
+    if (!updatedToken) {
+      return res.status(404).json({ message: "Token not found." });
+    }
+
+    res.status(200).json({ message: "Featured status updated.", token: updatedToken });
   } catch (error) {
-    console.error("addFeaturedToken error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error setting featured status:", error);
+    res.status(500).json({ message: "Server error while setting featured status." });
   }
 };
 
-export const addPromotedToken = async (req, res) => {
+export const setPromoted = async (req, res) => {
   try {
     const { id } = req.params;
     const { status, startDate, endDate, position } = req.body;
 
-    const token = await Token.findById(id);
-    if (!token) return res.status(404).json({ error: "Token not found" });
+    if (!id || position === undefined) {
+      return res.status(400).json({ message: "Missing required fields." });
+    }
 
-    token.promoted = {
-      status,
-      startDate,
-      endDate,
-      position,
-    };
+    const updatedToken = await Token.findByIdAndUpdate(id, {
+      isPromoted: status,
+      promoted: {
+        status,
+        startDate,
+        endDate,
+        position,
+      },
+    }, { new: true });
 
-    await token.save();
-    res.status(200).json({ message: "Promoted status updated", token });
+    if (!updatedToken) {
+      return res.status(404).json({ message: "Token not found." });
+    }
+
+    res.status(200).json({ message: "Promoted status updated.", token: updatedToken });
   } catch (error) {
-    console.error("addPromotedToken error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error setting promoted status:", error);
+    res.status(500).json({ message: "Server error while setting promoted status." });
+  }
+};
+
+// Get featured tokens
+export const getFeaturedTokens = async (req, res) => {
+  const tokens = await Token.find({ isFeatured: true });
+  res.status(200).json(tokens);
+};
+
+// Get trending tokens
+export const getTrendingTokens = async (req, res) => {
+  const tokens = await Token.find({ isTrending: true });
+  res.status(200).json(tokens);
+};
+
+export const getPromotedTokens = async (req, res) => {
+  const tokens = await Token.find({ isTrending: true });
+  res.status(200).json(tokens);
+};
+
+// Admin: Get all tokens (optional filters)
+export const getAdminTokens = async (req, res) => {
+  try {
+    const { status, featured, trending } = req.query;
+
+    const filter = {};
+    if (status) filter.status = status;
+    if (featured === 'true') filter.isFeatured = true;
+    if (trending === 'true') filter.isTrending = true;
+
+    const tokens = await Token.find(filter).sort({ createdAt: -1 });
+    res.status(200).json(tokens);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch admin tokens.' });
   }
 };
 
