@@ -237,14 +237,27 @@ export const deleteToken = async (req, res) => {
 export const searchTokens = async (req, res) => {
   try {
     const query = req.query.q;
+
+    if (!query || query.trim() === '') {
+      return res.status(400).json({ error: 'Query parameter is required.' });
+    }
+
     const tokens = await Token.find({
-      name: { $regex: query, $options: 'i' } // Case-insensitive
-    });
+      $or: [
+        { name: { $regex: query, $options: 'i' } },
+        { symbol: { $regex: query, $options: 'i' } }
+      ]
+    })
+      .limit(10)
+      .select('name symbol chain logo'); // only return necessary fields
+
     res.status(200).json(tokens);
   } catch (error) {
+    console.error('Token search error:', error);
     res.status(500).json({ error: 'Search failed.' });
   }
 };
+
 
 export const getLeaderboard = async (req, res) => {
   try {
