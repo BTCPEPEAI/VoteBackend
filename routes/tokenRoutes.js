@@ -24,6 +24,8 @@ import {
 
 const router = express.Router();
 
+router.get('/search', searchTokens); // 👈 must be before any `/:id` routes
+
 router.post('/submit', upload.single('logo'), addToken);
 router.get('/all', getAllTokens);
 router.post('/:id/vote', voteForToken);
@@ -38,7 +40,7 @@ router.get('/featured/list', getFeaturedTokens);
 router.get('/trending/list', getTrendingTokens);
 router.get('/promoted/list', getPromotedTokens);    // ✅ ADDED
 
-router.get('/search', tokenController.searchTokens); // 👈 must be before any `/:id` routes
+
 router.get('/leaderboard', getLeaderboard);
 router.get('/homepage', getHomepageTokens);
 router.post('/:id/boost', boostToken);
