@@ -11,8 +11,9 @@ import {
     setPromoted,
     getAdminTokens,
     deleteToken,
-    getFeaturedTokens,
-    getTrendingTokens,
+    addTrendingToken,
+    addFeaturedToken,
+    addPromotedToken,
     searchTokens,
     getLeaderboard,
     boostToken,
@@ -35,9 +36,9 @@ router.post('/:id/vote', voteForToken);
 router.get('/:id', getTokenById);
 
 // Admin: set featured/trending
-router.post('/:id/featured', setFeatured);   // body: { status: true/false }
-router.post('/:id/trending', setTrending);   // body: { status: true/false }
-router.post('/:id/promoted', setPromoted);
+router.post('/:id/trending', addTrendingToken);
+router.post('/:id/featured', addFeaturedToken);
+router.post('/:id/promoted', addPromotedToken);
 router.get('/admin/list', getAdminTokens);
 router.get('/featured/list', getFeaturedTokens);
 router.get('/trending/list', getTrendingTokens);
