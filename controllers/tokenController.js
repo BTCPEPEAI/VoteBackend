@@ -145,47 +145,78 @@ export const getTokenById = async (req, res) => {
   }
 };
 
-// Admin: Toggle featured
-export const setFeatured = async (req, res) => {
+// Update Featured
+exports.setFeatured = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body; // true or false
+    const { status, startDate, endDate, position } = req.body;
 
-    // Allow only 5 featured tokens
-    if (status) {
-      const count = await Token.countDocuments({ isFeatured: true });
-      if (count >= 5) {
-        return res.status(400).json({ error: 'Only 5 tokens can be featured at a time.' });
-      }
-    }
+    const token = await Token.findByIdAndUpdate(
+      id,
+      {
+        isFeatured: status,
+        featuredStartDate: startDate,
+        featuredEndDate: endDate,
+        featuredPosition: position,
+      },
+      { new: true }
+    );
 
-    await Token.findByIdAndUpdate(id, { isFeatured: status });
-    res.status(200).json({ message: 'Featured status updated.' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update featured status.' });
+    res.json(token);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update featured status" });
   }
 };
 
-// Admin: Toggle trending
-export const setTrending = async (req, res) => {
+// Update Trending
+exports.setTrending = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, startDate, endDate, position } = req.body;
 
-    // Allow only 5 trending tokens
-    if (status) {
-      const count = await Token.countDocuments({ isTrending: true });
-      if (count >= 5) {
-        return res.status(400).json({ error: 'Only 5 tokens can be trending at a time.' });
-      }
-    }
+    const token = await Token.findByIdAndUpdate(
+      id,
+      {
+        isTrending: status,
+        trendingStartDate: startDate,
+        trendingEndDate: endDate,
+        trendingPosition: position,
+      },
+      { new: true }
+    );
 
-    await Token.findByIdAndUpdate(id, { isTrending: status });
-    res.status(200).json({ message: 'Trending status updated.' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update trending status.' });
+    res.json(token);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update trending status" });
   }
 };
+
+// Update Promoted
+exports.setPromoted = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, startDate, endDate, position } = req.body;
+
+    const token = await Token.findByIdAndUpdate(
+      id,
+      {
+        isPromoted: status,
+        promotedStartDate: startDate,
+        promotedEndDate: endDate,
+        promotedPosition: position,
+      },
+      { new: true }
+    );
+
+    res.json(token);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update promoted status" });
+  }
+};
+
 
 // Get featured tokens
 export const getFeaturedTokens = async (req, res) => {
@@ -195,6 +226,11 @@ export const getFeaturedTokens = async (req, res) => {
 
 // Get trending tokens
 export const getTrendingTokens = async (req, res) => {
+  const tokens = await Token.find({ isTrending: true });
+  res.status(200).json(tokens);
+};
+
+export const getPromotedTokens = async (req, res) => {
   const tokens = await Token.find({ isTrending: true });
   res.status(200).json(tokens);
 };
