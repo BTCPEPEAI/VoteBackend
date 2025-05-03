@@ -146,59 +146,76 @@ export const getTokenById = async (req, res) => {
 };
 
 // Set featured status and date range
-export const setFeatured = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status, startDate, endDate } = req.body;
+// controllers/tokenController.js
 
-    const updatedToken = await Token.findByIdAndUpdate(id, {
+exports.setFeatured = async (req, res) => {
+  try {
+    const { tokenId, status, startDate, endDate, position } = req.body;
+
+    if (!tokenId) {
+      return res.status(400).json({ error: 'tokenId is required' });
+    }
+
+    await Token.findByIdAndUpdate(tokenId, {
       isFeatured: status,
       featuredStartDate: startDate,
       featuredEndDate: endDate,
-    }, { new: true });
+      featuredPosition: position,
+    });
 
-    res.json({ message: "Featured status updated", token: updatedToken });
-  } catch (error) {
-    console.error("setFeatured error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(200).json({ message: 'Featured status updated' });
+  } catch (err) {
+    console.error("setFeatured error:", err);
+    res.status(500).json({ error: "Server error" });
   }
 };
 
-// Set trending status and date range
-export const setTrending = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status, startDate, endDate } = req.body;
 
-    const updatedToken = await Token.findByIdAndUpdate(id, {
+// Set trending status and date range
+exports.setTrending = async (req, res) => {
+  try {
+    const { tokenId, status, startDate, endDate, position } = req.body;
+
+    if (!tokenId) {
+      return res.status(400).json({ error: 'tokenId is required' });
+    }
+
+    await Token.findByIdAndUpdate(tokenId, {
       isTrending: status,
       trendingStartDate: startDate,
       trendingEndDate: endDate,
-    }, { new: true });
+      trendingPosition: position
+    });
 
-    res.json({ message: "Trending status updated", token: updatedToken });
-  } catch (error) {
-    console.error("setTrending error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(200).json({ message: 'Trending status updated' });
+  } catch (err) {
+    console.error("setTrending error:", err);
+    res.status(500).json({ error: "Server error" });
   }
 };
 
 // Set promoted status and date range
-export const setPromoted = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status, startDate, endDate } = req.body;
+// controllers/tokenController.js
 
-    const updatedToken = await Token.findByIdAndUpdate(id, {
+exports.setPromoted = async (req, res) => {
+  try {
+    const { tokenId, status, startDate, endDate, position } = req.body;
+
+    if (!tokenId) {
+      return res.status(400).json({ error: 'tokenId is required' });
+    }
+
+    await Token.findByIdAndUpdate(tokenId, {
       isPromoted: status,
       promotedStartDate: startDate,
       promotedEndDate: endDate,
-    }, { new: true });
+      promotedPosition: position,
+    });
 
-    res.json({ message: "Promoted status updated", token: updatedToken });
-  } catch (error) {
-    console.error("setPromoted error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(200).json({ message: 'Promoted status updated' });
+  } catch (err) {
+    console.error("setPromoted error:", err);
+    res.status(500).json({ error: "Server error" });
   }
 };
 
