@@ -62,5 +62,5 @@ isPromoted: Boolean,
   lastBoostedIPs: [{ ip: String, date: Date }],
 });
 
-const Token = mongoose.model('Token', tokenSchema);
+const Token = mongoose.model('Token', tokenSchema, 'tokens');
 export default Token;
