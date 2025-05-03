@@ -15,7 +15,6 @@ import {
     getTrendingTokens,
     getPromotedTokens,         // ✅ ADD THIS
     searchTokens,
-    tokenController,
     getLeaderboard,
     boostToken,
     getHomepageTokens,
