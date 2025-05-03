@@ -37,7 +37,7 @@ router.get('/featured/list', getFeaturedTokens);
 router.get('/trending/list', getTrendingTokens);
 router.get('/promoted/list', getPromotedTokens);    // ✅ ADDED
 
-router.get('/search', searchTokens);
+router.get('/search', tokenController.searchTokens); // 👈 must be before any `/:id` routes
 router.get('/leaderboard', getLeaderboard);
 router.get('/homepage', getHomepageTokens);
 router.post('/:id/boost', boostToken);
