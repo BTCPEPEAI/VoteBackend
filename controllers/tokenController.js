@@ -149,96 +149,45 @@ export const getTokenById = async (req, res) => {
 // controllers/tokenController.js
 
 // Assuming you're using Mongoose and Token model is already imported
-
-export const setTrending = async (req, res) => {
+const updateTokenStatus = async (req, res, type) => {
   try {
     const { id } = req.params;
     const { status, startDate, endDate, position } = req.body;
 
-    if (!id || position === undefined) {
-      return res.status(400).json({ message: "Missing required fields." });
+    if (!id || typeof position === 'undefined' || typeof status === 'undefined') {
+      return res.status(400).json({ message: "Missing required fields: id, status, or position." });
     }
 
-    const updatedToken = await Token.findByIdAndUpdate(id, {
-      isTrending: status,
-      trending: {
+    const updateData = {
+      [`is${type}`]: status,
+      [type.toLowerCase()]: {
         status,
         startDate,
         endDate,
         position,
-      },
-    }, { new: true });
+      }
+    };
+
+    const updatedToken = await Token.findByIdAndUpdate(id, updateData, { new: true });
 
     if (!updatedToken) {
       return res.status(404).json({ message: "Token not found." });
     }
 
-    res.status(200).json({ message: "Trending status updated.", token: updatedToken });
+    res.status(200).json({
+      message: `${type} status updated successfully.`,
+      token: updatedToken
+    });
   } catch (error) {
-    console.error("Error setting trending status:", error);
-    res.status(500).json({ message: "Server error while setting trending status." });
+    console.error(`Error setting ${type} status:`, error);
+    res.status(500).json({ message: `Server error while updating ${type} status.` });
   }
 };
 
-export const setFeatured = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status, startDate, endDate, position } = req.body;
-
-    if (!id || position === undefined) {
-      return res.status(400).json({ message: "Missing required fields." });
-    }
-
-    const updatedToken = await Token.findByIdAndUpdate(id, {
-      isFeatured: status,
-      featured: {
-        status,
-        startDate,
-        endDate,
-        position,
-      },
-    }, { new: true });
-
-    if (!updatedToken) {
-      return res.status(404).json({ message: "Token not found." });
-    }
-
-    res.status(200).json({ message: "Featured status updated.", token: updatedToken });
-  } catch (error) {
-    console.error("Error setting featured status:", error);
-    res.status(500).json({ message: "Server error while setting featured status." });
-  }
-};
-
-export const setPromoted = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status, startDate, endDate, position } = req.body;
-
-    if (!id || position === undefined) {
-      return res.status(400).json({ message: "Missing required fields." });
-    }
-
-    const updatedToken = await Token.findByIdAndUpdate(id, {
-      isPromoted: status,
-      promoted: {
-        status,
-        startDate,
-        endDate,
-        position,
-      },
-    }, { new: true });
-
-    if (!updatedToken) {
-      return res.status(404).json({ message: "Token not found." });
-    }
-
-    res.status(200).json({ message: "Promoted status updated.", token: updatedToken });
-  } catch (error) {
-    console.error("Error setting promoted status:", error);
-    res.status(500).json({ message: "Server error while setting promoted status." });
-  }
-};
+// Controller functions using the shared helper
+export const setTrending = (req, res) => updateTokenStatus(req, res, 'Trending');
+export const setFeatured = (req, res) => updateTokenStatus(req, res, 'Featured');
+export const setPromoted = (req, res) => updateTokenStatus(req, res, 'Promoted');
 
 // Get featured tokens
 export const getFeaturedTokens = async (req, res) => {
