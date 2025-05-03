@@ -235,7 +235,7 @@ export const deleteToken = async (req, res) => {
   }
 };
 
-exports.searchTokens = async (req, res) => {
+export const searchTokens = async (req, res) => {
   try {
     console.log('🔍 Search triggered with query:', req.query.q); // ADD THIS
 
