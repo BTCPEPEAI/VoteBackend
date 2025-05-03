@@ -260,6 +260,26 @@ export const searchTokens = async (req, res) => {
   }
 };
 
+export const tokenController = async searchTokens(req, res) {
+    try {
+      const query = req.query.q || '';
+      const regex = new RegExp(query, 'i');
+
+      const tokens = await Token.find({
+        $or: [
+          { name: regex },
+          { symbol: regex }
+        ]
+      });
+
+      res.status(200).json(tokens);
+    } catch (error) {
+      console.error('Search error:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  };
+
+
 
 export const getLeaderboard = async (req, res) => {
   try {
