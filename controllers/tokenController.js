@@ -148,7 +148,8 @@ export const getTokenById = async (req, res) => {
 // Set featured status and date range
 // controllers/tokenController.js
 
-exports.setFeatured = async (req, res) => {
+export const setFeatured = async (req, res) => {
+
   try {
     const { tokenId, status, startDate, endDate, position } = req.body;
 
@@ -172,7 +173,7 @@ exports.setFeatured = async (req, res) => {
 
 
 // Set trending status and date range
-exports.setTrending = async (req, res) => {
+export const setTrending = async (req, res) => {
   try {
     const { tokenId, status, startDate, endDate, position } = req.body;
 
@@ -197,7 +198,7 @@ exports.setTrending = async (req, res) => {
 // Set promoted status and date range
 // controllers/tokenController.js
 
-exports.setPromoted = async (req, res) => {
+export const setPromoted = async (req, res) => {
   try {
     const { tokenId, status, startDate, endDate, position } = req.body;
 
