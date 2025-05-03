@@ -40,7 +40,7 @@ router.post('/:id/featured', setFeatured); // body: { status, startDate, endDate
 // Set token as trending
 router.post('/:id/trending', setTrending); // body: { status, startDate, endDate, position }
 // Set token as promoted
-router.post('/:id/promoted', setPromoted); // body: { status, startDate, endDate, position }
+
 
 // === Admin Panel Token Fetching ===
 router.get('/admin/list', getAdminTokens);        // All tokens (for management panel)
