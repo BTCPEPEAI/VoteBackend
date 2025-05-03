@@ -25,18 +25,27 @@ const tokenSchema = new mongoose.Schema({
   votes: { type: Number, default: 0 },
   boostCount: { type: Number, default: 0 },
   boosts: { type: Number, default: 0 },
-  isFeatured: { type: Boolean, default: false },
-  featuredStartDate: Date,
-  featuredEndDate: Date,
-  featuredPosition: Number,
-  isTrending: { type: Boolean, default: false },
-  trendingStartDate: Date,
-  trendingEndDate: Date,
-  trendingPosition: Number,
-  isPromoted: { type: Boolean, default: false },
-  promotedStartDate: Date,
-  promotedEndDate: Date,
-  promotedPosition: Number,
+  status: { type: Boolean, default: false },
+
+  featured: {
+    status: { type: Boolean, default: false },
+    startDate: Date,
+    endDate: Date,
+    position: Number,
+  },
+  trending: {
+    status: { type: Boolean, default: false },
+    startDate: Date,
+    endDate: Date,
+    position: Number,
+  },
+  promoted: {
+    status: { type: Boolean, default: false },
+    startDate: Date,
+    endDate: Date,
+    position: Number,
+  },
+
   featuredUntil: { type: Date, default: null },
   boostedUntil: { type: Date, default: null },
   submittedAt: { type: Date, default: Date.now },
@@ -46,7 +55,7 @@ const tokenSchema = new mongoose.Schema({
   shares: { type: Number, default: 0 },
   kyc: { type: Boolean, default: false },
   audit: { type: Boolean, default: false },
-  lastBoostedIPs: [{ ip: String, date: Date }]
+  lastBoostedIPs: [{ ip: String, date: Date }],
 });
 
 const Token = mongoose.model('Token', tokenSchema);
