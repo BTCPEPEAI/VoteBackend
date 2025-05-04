@@ -1,79 +1,78 @@
 import express from 'express';
 import upload from '../config/multer.js';
 import {
-    addToken,
-    getAllTokens,
-    voteForToken,
-    getTokenById,
-    setFeatured,
-    setTrending,
-    setPromoted,
-    getAdminTokens,
-    deleteToken,
-    getFeaturedTokens,
-    getTrendingTokens,
-    getPromotedTokens,
-    searchTokens,
-    getLeaderboard,
-    boostToken,
-    getHomepageTokens,
-    updateTokenAnalytics
+  addToken,
+  getAllTokens,
+  voteForToken,
+  getTokenById,
+  setFeatured,
+  setTrending,
+  setPromoted,
+  getAdminTokens,
+  deleteToken,
+  getFeaturedTokens,
+  getTrendingTokens,
+  getPromotedTokens,
+  searchTokens,
+  getLeaderboard,
+  boostToken,
+  getHomepageTokens,
+  updateTokenAnalytics,
+  updateTokenStatus,
 } from '../controllers/tokenController.js';
+
+import Token from '../models/Token.js';
 
 const router = express.Router();
 
-// ✅ Search tokens by query
+// 🔍 Search Tokens
 router.get('/search', searchTokens);
 
-// ✅ Submit new token
+// 📥 Submit a Token (with logo upload)
 router.post('/submit', upload.single('logo'), addToken);
 
-// ✅ Fetch all tokens
-router.get('/all', getAllTokens);
-
-// ✅ Fetch tokens by query param status (e.g. ?status=featured)
+// 📄 Fetch all tokens (or filtered by status)
 router.get('/', async (req, res) => {
-    const status = req.query.status;
-    try {
-        let filter = {};
-        if (status === 'featured') filter.isFeatured = true;
-        else if (status === 'trending') filter.isTrending = true;
-        else if (status === 'promoted') filter.isPromoted = true;
+  const status = req.query.status;
+  try {
+    const filter = {};
+    if (status === 'featured') filter.isFeatured = true;
+    else if (status === 'trending') filter.isTrending = true;
+    else if (status === 'promoted') filter.isPromoted = true;
 
-        const tokens = await Token.find(filter).sort({ position: 1 });
-        res.status(200).json(tokens);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch tokens by status.' });
-    }
+    const tokens = await Token.find(filter).sort({ position: 1 });
+    res.status(200).json(tokens);
+  } catch (error) {
+    console.error("Error fetching tokens:", error);
+    res.status(500).json({ error: "Failed to fetch tokens" });
+  }
 });
 
-// ✅ Explicit routes required by frontend
-router.get('/featured', getFeaturedTokens);
-router.get('/trending', getTrendingTokens);
-router.get('/promoted', getPromotedTokens);
-
-// ✅ Admin panel related
-router.get('/admin/list', getAdminTokens);
-
-// ✅ Homepage tokens
-router.get('/homepage', getHomepageTokens);
-
-// ✅ Voting
+// 🧠 Token Detail & Voting
+router.get('/:id', getTokenById);
 router.post('/:id/vote', voteForToken);
 
-// ✅ Boost
-router.post('/:id/boost', boostToken);
+// 📈 Token Status Update for Admin (used in TokenManagementDialog)
+router.post('/:id/featured', setFeatured);     // Legacy support
+router.post('/:id/trending', setTrending);     // Legacy support
+router.post('/:id/promoted', setPromoted);     // Legacy support
 
-// ✅ Analytics
+// ✅ RECOMMENDED: Unified update route
+router.post('/:id/status', updateTokenStatus); // <- Call this from frontend to update any status (featured/trending/promoted) with full metadata
+
+// 🧰 Admin + Analytics
+router.get('/admin/list', getAdminTokens);
+router.get('/featured/list', getFeaturedTokens);
+router.get('/trending/list', getTrendingTokens);
+router.get('/promoted/list', getPromotedTokens);
+
+// 💹 Voting + Leaderboard + Homepage
+router.get('/leaderboard', getLeaderboard);
+router.get('/homepage', getHomepageTokens);
+router.post('/:id/boost', boostToken);
 router.post('/:id/analytics', updateTokenAnalytics);
 
-// ✅ Toggle featured/trending/promoted status
-router.post('/:id/featured', setFeatured);
-router.post('/:id/trending', setTrending);
-router.post('/:id/promoted', setPromoted);
-
-// ✅ Get token by ID and delete token
-router.get('/:id', getTokenById);
+// ❌ Delete
 router.delete('/:id', deleteToken);
 
 export default router;
