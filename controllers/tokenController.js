@@ -149,7 +149,7 @@ export const getTokenById = async (req, res) => {
 
 const updateTokenStatus = async (req, res, type) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.body.token; // support both ways
     const { status, startDate, endDate, position } = req.body;
 
     if (!id || typeof position === 'undefined' || typeof status === 'undefined') {
