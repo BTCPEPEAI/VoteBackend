@@ -184,8 +184,6 @@ export const trendingTokens = await Token.find({ 'trending.status': true }).sort
     console.error("Trending Fetch Error:", err.message);
     res.status(500).json({ error: "Failed to fetch trending tokens." });
   }
-};
-
 
 export const getPromotedTokens = async (req, res) => {
   const tokens = await Token.find({ 'promoted.status': true }).sort({ 'promoted.position': 1 });
