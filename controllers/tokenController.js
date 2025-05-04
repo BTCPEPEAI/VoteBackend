@@ -351,3 +351,28 @@ export const updateTokenAnalytics = async (req, res) => {
   await token.save();
   res.json({ success: true });
 };
+
+
+const getTokensByStatus = async (req, res) => {
+  try {
+    const statusType = req.query.status;
+
+    if (!statusType) {
+      return res.status(400).json({ message: "Status type is required" });
+    }
+
+    const tokens = await Token.find({ [`${statusType}.status`]: true }).sort({ [`${statusType}.position`]: 1 });
+
+    res.status(200).json(tokens);
+  } catch (error) {
+    console.error("Error fetching tokens by status:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// make sure it's exported:
+module.exports = {
+  // other functions...
+  getTokensByStatus,
+  updateTokenStatus,
+};
