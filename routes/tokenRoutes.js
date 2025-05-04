@@ -18,61 +18,60 @@ import {
   boostToken,
   getHomepageTokens,
   updateTokenAnalytics,
-  updateTokenStatus,
 } from '../controllers/tokenController.js';
-
-import Token from '../models/Token.js';
 
 const router = express.Router();
 
-// 🔍 Search Tokens
+// Search tokens (must be before /:id to prevent route collision)
 router.get('/search', searchTokens);
 
-// 📥 Submit a Token (with logo upload)
+// Token submission (with image upload)
 router.post('/submit', upload.single('logo'), addToken);
 
-// 📄 Fetch all tokens (or filtered by status)
-router.get('/', async (req, res) => {
-  const status = req.query.status;
-  try {
-    const filter = {};
-    if (status === 'featured') filter.isFeatured = true;
-    else if (status === 'trending') filter.isTrending = true;
-    else if (status === 'promoted') filter.isPromoted = true;
+// General token list
+router.get('/all', getAllTokens);
 
-    const tokens = await Token.find(filter).sort({ position: 1 });
+// Admin: filtered list of tokens
+router.get('/admin/list', getAdminTokens);
+
+// Homepage prioritized tokens
+router.get('/homepage', getHomepageTokens);
+
+// Leaderboard based on votes
+router.get('/leaderboard', getLeaderboard);
+
+// Filtered status-based list via query (?status=featured|trending|promoted)
+router.get('/', async (req, res) => {
+  const { status } = req.query;
+  try {
+    const query = {};
+    if (status === 'featured') query['featured.status'] = true;
+    else if (status === 'trending') query['trending.status'] = true;
+    else if (status === 'promoted') query['promoted.status'] = true;
+
+    const tokens = await Token.find(query).sort({ [`${status}.position`]: 1 });
     res.status(200).json(tokens);
   } catch (error) {
-    console.error("Error fetching tokens:", error);
-    res.status(500).json({ error: "Failed to fetch tokens" });
+    console.error("Status filter error:", error);
+    res.status(500).json({ message: "Server error while filtering tokens" });
   }
 });
 
-// 🧠 Token Detail & Voting
+// Token ID-specific routes
 router.get('/:id', getTokenById);
 router.post('/:id/vote', voteForToken);
+router.post('/:id/boost', boostToken);
+router.post('/:id/analytics', updateTokenAnalytics);
+router.delete('/:id', deleteToken);
 
-// 📈 Token Status Update for Admin (used in TokenManagementDialog)
-router.post('/:id/featured', setFeatured);     // Legacy support
-router.post('/:id/trending', setTrending);     // Legacy support
-router.post('/:id/promoted', setPromoted);     // Legacy support
+// Admin status toggling (position/startDate/endDate)
+router.post('/:id/featured', setFeatured);
+router.post('/:id/trending', setTrending);
+router.post('/:id/promoted', setPromoted);
 
-// ✅ RECOMMENDED: Unified update route
-router.post('/:id/status', updateTokenStatus); // <- Call this from frontend to update any status (featured/trending/promoted) with full metadata
-
-// 🧰 Admin + Analytics
-router.get('/admin/list', getAdminTokens);
+// Legacy list endpoints (optional)
 router.get('/featured/list', getFeaturedTokens);
 router.get('/trending/list', getTrendingTokens);
 router.get('/promoted/list', getPromotedTokens);
-
-// 💹 Voting + Leaderboard + Homepage
-router.get('/leaderboard', getLeaderboard);
-router.get('/homepage', getHomepageTokens);
-router.post('/:id/boost', boostToken);
-router.post('/:id/analytics', updateTokenAnalytics);
-
-// ❌ Delete
-router.delete('/:id', deleteToken);
 
 export default router;
