@@ -81,7 +81,7 @@ export const addToken = async (req, res) => {
   }
 };
 
-// Get all tokens
+// ✅ Get all tokens with optional sorting/status filter
 export const getAllTokens = async (req, res) => {
   try {
     const { sort = 'votes', status = 'all' } = req.query;
@@ -89,11 +89,10 @@ export const getAllTokens = async (req, res) => {
     const sortOptions = {
       votes: { votes: -1 },
       recent: { submittedAt: -1 },
-      boosts: { boosts: -1 }
+      boosts: { boostCount: -1 }
     };
 
     const filter = status === 'all' ? {} : { launchStatus: status };
-
     const tokens = await Token.find(filter).sort(sortOptions[sort] || sortOptions.votes);
     res.status(200).json(tokens);
   } catch (error) {
@@ -101,19 +100,15 @@ export const getAllTokens = async (req, res) => {
   }
 };
 
-
-// Vote for a token
+// ✅ Vote
 export const voteForToken = async (req, res) => {
   try {
     const tokenId = req.params.id;
     const ip = req.ip || req.headers['x-forwarded-for'] || 'unknown';
-    const today = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+    const today = new Date().toISOString().slice(0, 10);
 
     const alreadyVoted = await VoteLog.findOne({ tokenId, ip, date: today });
-
-    if (alreadyVoted) {
-      return res.status(403).json({ error: 'You can only vote once per day.' });
-    }
+    if (alreadyVoted) return res.status(403).json({ error: 'You can only vote once per day.' });
 
     const token = await Token.findById(tokenId);
     if (!token) return res.status(404).json({ error: 'Token not found.' });
@@ -122,159 +117,134 @@ export const voteForToken = async (req, res) => {
     await token.save();
 
     await VoteLog.create({ tokenId, ip, date: today });
-
     res.status(200).json({ message: 'Vote counted.', votes: token.votes });
   } catch (error) {
     res.status(500).json({ error: 'Failed to vote.' });
   }
 };
 
-// Get single token by ID
+// ✅ Get single token
 export const getTokenById = async (req, res) => {
   try {
-    const tokenId = req.params.id;
-    const token = await Token.findById(tokenId);
-
-    if (!token) {
-      return res.status(404).json({ error: 'Token not found.' });
-    }
-
+    const token = await Token.findById(req.params.id);
+    if (!token) return res.status(404).json({ error: 'Token not found.' });
     res.status(200).json(token);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch token.' });
   }
 };
 
-
-
+// ✅ Generic status update handler
 const updateTokenStatus = async (req, res, type) => {
   try {
-    const id = req.params.id || req.body.token; // support both ways
+    const id = req.params.id || req.body.token;
     const { status, startDate, endDate, position } = req.body;
 
-    if (!id || typeof position === 'undefined' || typeof status === 'undefined') {
-      return res.status(400).json({ message: "Missing required fields: id, status, or position." });
+    if (!id || typeof status === 'undefined' || typeof position === 'undefined') {
+      return res.status(400).json({ message: "Missing id, status, or position." });
     }
 
     const updateData = {
       [`${type.toLowerCase()}.status`]: status,
       [`${type.toLowerCase()}.startDate`]: startDate,
       [`${type.toLowerCase()}.endDate`]: endDate,
-      [`${type.toLowerCase()}.position`]: position,
+      [`${type.toLowerCase()}.position`]: position
     };
 
-    const updatedToken = await Token.findByIdAndUpdate(id, updateData, { new: true });
+    const updated = await Token.findByIdAndUpdate(id, updateData, { new: true });
+    if (!updated) return res.status(404).json({ message: "Token not found." });
 
-    if (!updatedToken) {
-      return res.status(404).json({ message: "Token not found." });
-    }
-
-    res.status(200).json({
-      message: `${type} status updated successfully.`,
-      token: updatedToken
-    });
+    res.status(200).json({ message: `${type} status updated.`, token: updated });
   } catch (error) {
-    console.error(`Error setting ${type} status:`, error);
-    res.status(500).json({ message: `Server error while updating ${type} status.` });
+    console.error(`Error updating ${type}:`, error);
+    res.status(500).json({ message: `Failed to update ${type} status.` });
   }
 };
 
-// Export controller functions for routes
-export const setTrending = (req, res) => updateTokenStatus(req, res, 'Trending');
+// ✅ Status toggles
 export const setFeatured = (req, res) => updateTokenStatus(req, res, 'Featured');
+export const setTrending = (req, res) => updateTokenStatus(req, res, 'Trending');
 export const setPromoted = (req, res) => updateTokenStatus(req, res, 'Promoted');
 
-// Get featured tokens
+// ✅ Proper featured/trending/promoted fetchers
 export const getFeaturedTokens = async (req, res) => {
-  const tokens = await Token.find({ isFeatured: true });
+  const tokens = await Token.find({ 'featured.status': true }).sort({ 'featured.position': 1 });
   res.status(200).json(tokens);
 };
-
-// Get trending tokens
 export const getTrendingTokens = async (req, res) => {
-  const tokens = await Token.find({ isTrending: true });
+  const tokens = await Token.find({ 'trending.status': true }).sort({ 'trending.position': 1 });
   res.status(200).json(tokens);
 };
-
 export const getPromotedTokens = async (req, res) => {
-  const tokens = await Token.find({ isPromoted: true });
+  const tokens = await Token.find({ 'promoted.status': true }).sort({ 'promoted.position': 1 });
   res.status(200).json(tokens);
 };
 
-
-// Admin: Get all tokens (optional filters)
+// ✅ Admin view
 export const getAdminTokens = async (req, res) => {
   try {
-    const { status, featured, trending } = req.query;
-
+    const { status } = req.query;
     const filter = {};
-    if (status) filter.status = status;
-    if (featured === 'true') filter.isFeatured = true;
-    if (trending === 'true') filter.isTrending = true;
+
+    if (status === 'featured') filter['featured.status'] = true;
+    if (status === 'trending') filter['trending.status'] = true;
+    if (status === 'promoted') filter['promoted.status'] = true;
 
     const tokens = await Token.find(filter).sort({ createdAt: -1 });
     res.status(200).json(tokens);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch admin tokens.' });
+    res.status(500).json({ error: 'Failed to fetch tokens.' });
   }
 };
 
-
+// ✅ Delete token
 export const deleteToken = async (req, res) => {
   try {
-    const token = await Token.findByIdAndDelete(req.params.id);
-    if (!token) return res.status(404).json({ error: 'Token not found.' });
+    const deleted = await Token.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ error: 'Token not found.' });
     res.status(200).json({ message: 'Token deleted.' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete token.' });
   }
 };
 
+// ✅ Search
 export const searchTokens = async (req, res) => {
   try {
-    console.log('🔍 Search triggered with query:', req.query.q); // ADD THIS
-
     const query = req.query.q;
-    if (!query || query.trim() === '') {
-      return res.status(400).json({ error: 'Query parameter is required.' });
-    }
+    if (!query?.trim()) return res.status(400).json({ error: 'Query required.' });
 
     const tokens = await Token.find({
       $or: [
         { name: { $regex: query, $options: 'i' } },
         { symbol: { $regex: query, $options: 'i' } }
       ]
-    })
-      .limit(10)
-      .select('name symbol chain logo');
+    }).limit(10).select('name symbol chain logo');
 
     res.status(200).json(tokens);
   } catch (error) {
-    console.error('Token search error:', error);
     res.status(500).json({ error: 'Search failed.' });
   }
 };
 
-
-
+// ✅ Leaderboard
 export const getLeaderboard = async (req, res) => {
   try {
-    const topTokens = await Token.find().sort({ votes: -1 }).limit(20);
-    res.status(200).json(topTokens);
+    const tokens = await Token.find().sort({ votes: -1 }).limit(20);
+    res.status(200).json(tokens);
   } catch (error) {
     res.status(500).json({ error: 'Failed to load leaderboard.' });
   }
 };
 
+// ✅ Boost
 export const boostToken = async (req, res) => {
   try {
     const tokenId = req.params.id;
     const ip = requestIp.getClientIp(req);
-
     const token = await Token.findById(tokenId);
     if (!token) return res.status(404).json({ error: 'Token not found.' });
 
-    // Check if IP already boosted in last 24 hrs
     const now = new Date();
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const hasBoosted = token.lastBoostedIPs.some(
@@ -282,91 +252,70 @@ export const boostToken = async (req, res) => {
     );
 
     if (hasBoosted) {
-      return res.status(403).json({ error: 'You can only boost this token once per 24 hours.' });
+      return res.status(403).json({ error: 'You can only boost once every 24h.' });
     }
 
-    // Clean old IPs (optional to keep doc small)
     token.lastBoostedIPs = token.lastBoostedIPs.filter(
       (entry) => new Date(entry.date) > oneDayAgo
     );
 
-    // Add this boost
     token.boostCount += 1;
     token.lastBoostedIPs.push({ ip, date: now });
 
-    // If boostCount reaches 10,000 → make it featured for 24h
     if (token.boostCount >= 10000 && !token.featuredUntil) {
-      token.featuredUntil = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h from now
+      token.featuredUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
     }
 
     await token.save();
-
     res.status(200).json({ message: 'Boost successful.', boostCount: token.boostCount });
   } catch (error) {
     res.status(500).json({ error: 'Boost failed.' });
   }
 };
 
+// ✅ Homepage
 export const getHomepageTokens = async (req, res) => {
   try {
-    const now = new Date();
-
     const tokens = await Token.find().sort([
-      ['featuredUntil', -1], // Featured first
-      ['boostCount', -1],    // Then by boost count
-      ['createdAt', -1]      // Then by recent
+      ['featuredUntil', -1],
+      ['boostCount', -1],
+      ['createdAt', -1]
     ]);
-
     res.status(200).json(tokens);
   } catch (error) {
-    res.status(500).json({ error: 'Could not load tokens.' });
+    res.status(500).json({ error: 'Could not load homepage tokens.' });
   }
 };
 
+// ✅ Analytics
 export const updateTokenAnalytics = async (req, res) => {
-  const { type, timeSpent = 0 } = req.body;
-  const token = await Token.findById(req.params.id);
-  if (!token) return res.status(404).json({ error: 'Token not found' });
-
-  switch (type) {
-    case 'view':
-      token.analytics.views += 1;
-      break;
-    case 'impression':
-      token.analytics.impressions += 1;
-      break;
-    case 'share':
-      token.analytics.shares += 1;
-      break;
-    case 'time':
-      token.analytics.avgTimeSpent = (
-        (token.analytics.avgTimeSpent * token.analytics.views + timeSpent) /
-        (token.analytics.views + 1)
-      );
-      break;
-    default:
-      return res.status(400).json({ error: 'Invalid analytics type' });
-  }
-
-  await token.save();
-  res.json({ success: true });
-};
-
-
-const getTokensByStatus = async (req, res) => {
   try {
-    const statusType = req.query.status;
+    const { type, timeSpent = 0 } = req.body;
+    const token = await Token.findById(req.params.id);
+    if (!token) return res.status(404).json({ error: 'Token not found' });
 
-    if (!statusType) {
-      return res.status(400).json({ message: "Status type is required" });
+    switch (type) {
+      case 'view':
+        token.analytics.views += 1;
+        break;
+      case 'impression':
+        token.analytics.impressions += 1;
+        break;
+      case 'share':
+        token.analytics.shares += 1;
+        break;
+      case 'time':
+        token.analytics.avgTimeSpent =
+          (token.analytics.avgTimeSpent * token.analytics.views + timeSpent) /
+          (token.analytics.views + 1);
+        break;
+      default:
+        return res.status(400).json({ error: 'Invalid analytics type' });
     }
 
-    const tokens = await Token.find({ [`${statusType}.status`]: true }).sort({ [`${statusType}.position`]: 1 });
-
-    res.status(200).json(tokens);
+    await token.save();
+    res.json({ success: true });
   } catch (error) {
-    console.error("Error fetching tokens by status:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ error: 'Analytics update failed.' });
   }
 };
-
