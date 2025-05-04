@@ -20,56 +20,59 @@ import {
     updateTokenAnalytics
 } from '../controllers/tokenController.js';
 
-import Token from '../models/Token.js';
-
 const router = express.Router();
 
-// 🔍 Search route (must come first)
+// ✅ Search tokens by query
 router.get('/search', searchTokens);
 
-// 🆕 Route to support `?status=featured|trending|promoted` (used in frontend)
+// ✅ Submit new token
+router.post('/submit', upload.single('logo'), addToken);
+
+// ✅ Fetch all tokens
+router.get('/all', getAllTokens);
+
+// ✅ Fetch tokens by query param status (e.g. ?status=featured)
 router.get('/', async (req, res) => {
     const status = req.query.status;
-
     try {
         let filter = {};
-        if (status === 'featured') filter['featured.status'] = true;
-        else if (status === 'trending') filter['trending.status'] = true;
-        else if (status === 'promoted') filter['promoted.status'] = true;
+        if (status === 'featured') filter.isFeatured = true;
+        else if (status === 'trending') filter.isTrending = true;
+        else if (status === 'promoted') filter.isPromoted = true;
 
-        const tokens = await Token.find(filter).sort({ [`${status}.position`]: 1 });
+        const tokens = await Token.find(filter).sort({ position: 1 });
         res.status(200).json(tokens);
     } catch (error) {
-        console.error("Error fetching tokens by status:", error);
-        res.status(500).json({ error: "Failed to fetch tokens" });
+        res.status(500).json({ error: 'Failed to fetch tokens by status.' });
     }
 });
 
-// ✅ Token submission (with logo)
-router.post('/submit', upload.single('logo'), addToken);
+// ✅ Explicit routes required by frontend
+router.get('/featured', getFeaturedTokens);
+router.get('/trending', getTrendingTokens);
+router.get('/promoted', getPromotedTokens);
 
-// 🔁 All tokens
-router.get('/all', getAllTokens);
-
-// 🔁 Admin, homepage, leaderboard views
+// ✅ Admin panel related
 router.get('/admin/list', getAdminTokens);
-router.get('/featured/list', getFeaturedTokens);
-router.get('/trending/list', getTrendingTokens);
-router.get('/promoted/list', getPromotedTokens);
-router.get('/leaderboard', getLeaderboard);
+
+// ✅ Homepage tokens
 router.get('/homepage', getHomepageTokens);
 
-// 🚀 Token actions
+// ✅ Voting
 router.post('/:id/vote', voteForToken);
+
+// ✅ Boost
 router.post('/:id/boost', boostToken);
+
+// ✅ Analytics
 router.post('/:id/analytics', updateTokenAnalytics);
 
-// ✨ Manage status from admin panel
+// ✅ Toggle featured/trending/promoted status
 router.post('/:id/featured', setFeatured);
 router.post('/:id/trending', setTrending);
 router.post('/:id/promoted', setPromoted);
 
-// 📄 Get by ID or delete
+// ✅ Get token by ID and delete token
 router.get('/:id', getTokenById);
 router.delete('/:id', deleteToken);
 
