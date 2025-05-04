@@ -370,9 +370,3 @@ const getTokensByStatus = async (req, res) => {
   }
 };
 
-// make sure it's exported:
-module.exports = {
-  // other functions...
-  getTokensByStatus,
-  updateTokenStatus,
-};
