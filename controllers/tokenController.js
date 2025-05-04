@@ -171,7 +171,7 @@ export const getFeaturedTokens = async (req, res) => {
   const tokens = await Token.find({ 'featured.status': true }).sort({ 'featured.position': 1 });
   res.status(200).json(tokens);
 };
-const getTrendingTokens = async (req, res) => {
+export const getTrendingTokens = async (req, res) => {
   try {
     const trendingTokens = await Trending.find().populate("tokenId");
     console.log("Trending Tokens Fetched:", trendingTokens);
