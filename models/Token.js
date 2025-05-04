@@ -21,45 +21,54 @@ const tokenSchema = new mongoose.Schema({
   logo: { type: String },
   livePrice: { type: String },
   chartEmbed: { type: String },
+
   isApproved: { type: Boolean, default: true },
+  status: { type: Boolean, default: false },
   votes: { type: Number, default: 0 },
   boostCount: { type: Number, default: 0 },
   boosts: { type: Number, default: 0 },
-  status: { type: Boolean, default: false },
 
-isTrending: Boolean,
-isFeatured: Boolean,
-isPromoted: Boolean,
+  isTrending: { type: Boolean, default: false },
+  isFeatured: { type: Boolean, default: false },
+  isPromoted: { type: Boolean, default: false },
 
   featured: {
     status: { type: Boolean, default: false },
-    startDate: Date,
-    endDate: Date,
-    position: Number,
+    startDate: { type: Date },
+    endDate: { type: Date },
+    position: { type: Number },
   },
   trending: {
     status: { type: Boolean, default: false },
-    startDate: Date,
-    endDate: Date,
-    position: Number,
+    startDate: { type: Date },
+    endDate: { type: Date },
+    position: { type: Number },
   },
   promoted: {
     status: { type: Boolean, default: false },
-    startDate: Date,
-    endDate: Date,
-    position: Number,
+    startDate: { type: Date },
+    endDate: { type: Date },
+    position: { type: Number },
   },
 
   featuredUntil: { type: Date, default: null },
   boostedUntil: { type: Date, default: null },
+
   submittedAt: { type: Date, default: Date.now },
   views: { type: Number, default: 0 },
   impressions: { type: Number, default: 0 },
   avgTimeSpent: { type: Number, default: 0 },
   shares: { type: Number, default: 0 },
+
   kyc: { type: Boolean, default: false },
   audit: { type: Boolean, default: false },
-  lastBoostedIPs: [{ ip: String, date: Date }],
+
+  lastBoostedIPs: [
+    {
+      ip: { type: String },
+      date: { type: Date },
+    },
+  ],
 });
 
 const Token = mongoose.model('Token', tokenSchema, 'tokens');
