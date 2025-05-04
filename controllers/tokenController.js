@@ -171,10 +171,17 @@ export const getFeaturedTokens = async (req, res) => {
   const tokens = await Token.find({ 'featured.status': true }).sort({ 'featured.position': 1 });
   res.status(200).json(tokens);
 };
-export const getTrendingTokens = async (req, res) => {
-  const tokens = await Token.find({ 'trending.status': true }).sort({ 'trending.position': 1 });
-  res.status(200).json(tokens);
+const getTrendingTokens = async (req, res) => {
+  try {
+    const trendingTokens = await Trending.find().populate("tokenId");
+    console.log("Trending Tokens Fetched:", trendingTokens);
+    res.json(trendingTokens);
+  } catch (error) {
+    console.error("Error fetching trending tokens:", error);
+    res.status(500).json({ error: "Failed to fetch token." });
+  }
 };
+
 export const getPromotedTokens = async (req, res) => {
   const tokens = await Token.find({ 'promoted.status': true }).sort({ 'promoted.position': 1 });
   res.status(200).json(tokens);
