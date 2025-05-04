@@ -187,15 +187,21 @@ export const getAdminTokens = async (req, res) => {
     const filter = {};
 
     if (status === 'featured') filter['featured.status'] = true;
-    if (status === 'trending') filter['trending.status'] = true;
-    if (status === 'promoted') filter['promoted.status'] = true;
+    else if (status === 'trending') filter['trending.status'] = true;
+    else if (status === 'promoted') filter['promoted.status'] = true;
+    // ✅ Optional: handle 'all' or unknown status
+    else if (status && status !== 'all') {
+      return res.status(400).json({ error: 'Invalid status filter.' });
+    }
 
     const tokens = await Token.find(filter).sort({ createdAt: -1 });
     res.status(200).json(tokens);
   } catch (error) {
+    console.error("🔴 Admin token fetch error:", error);
     res.status(500).json({ error: 'Failed to fetch tokens.' });
   }
 };
+
 
 // ✅ Delete token
 export const deleteToken = async (req, res) => {
