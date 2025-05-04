@@ -1,3 +1,5 @@
+import Token from '../models/Token.js'; // or adjust path if needed
+
 import express from 'express';
 import upload from '../config/multer.js';
 import {
