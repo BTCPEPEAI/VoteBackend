@@ -344,5 +344,4 @@ export {
   updateTokenStatus,
   deleteToken,
   getFeaturedTokens,
-  getTrendingTokens,
 };
