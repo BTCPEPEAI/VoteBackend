@@ -256,7 +256,7 @@ export const getLeaderboard = async (req, res) => {
 export const boostToken = async (req, res) => {
   try {
     const tokenId = req.params.id;
-    const ip = requestIp.getClientIp(req);
+    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "").split(",")[0].trim();
     const token = await Token.findById(tokenId);
     if (!token) return res.status(404).json({ error: 'Token not found.' });
 
@@ -333,4 +333,16 @@ export const updateTokenAnalytics = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Analytics update failed.' });
   }
+};
+
+export {
+  addToken,
+  getAllTokens,
+  getTokenById,
+  voteForToken,
+  boostToken,
+  updateTokenStatus,
+  deleteToken,
+  getFeaturedTokens,
+  getTrendingTokens
 };
