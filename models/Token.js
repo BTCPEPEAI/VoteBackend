@@ -26,7 +26,6 @@ const tokenSchema = new mongoose.Schema({
   status: { type: Boolean, default: false },
   votes: { type: Number, default: 0 },
   boostCount: { type: Number, default: 0 },
-  boosts: { type: Number, default: 0 },
 
   isTrending: { type: Boolean, default: false },
   isFeatured: { type: Boolean, default: false },
