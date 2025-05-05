@@ -335,13 +335,3 @@ export const updateTokenAnalytics = async (req, res) => {
   }
 };
 
-export {
-  addToken,
-  getAllTokens,
-  getTokenById,
-  voteForToken,
-  boostToken,
-  updateTokenStatus,
-  deleteToken,
-  getFeaturedTokens,
-};
