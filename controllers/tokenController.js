@@ -257,16 +257,22 @@ export const boostToken = async (req, res) => {
   try {
     const tokenId = req.params.id;
     const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "").split(",")[0].trim();
+    console.log("Boost request from IP:", ip, "for token:", tokenId);
+
     const token = await Token.findById(tokenId);
     if (!token) return res.status(404).json({ error: 'Token not found.' });
 
+    if (!token.lastBoostedIPs) token.lastBoostedIPs = [];
+
     const now = new Date();
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
     const hasBoosted = token.lastBoostedIPs.some(
       (entry) => entry.ip === ip && new Date(entry.date) > oneDayAgo
     );
 
     if (hasBoosted) {
+      console.log("IP already boosted in the last 24h.");
       return res.status(403).json({ error: 'You can only boost once every 24h.' });
     }
 
@@ -274,7 +280,7 @@ export const boostToken = async (req, res) => {
       (entry) => new Date(entry.date) > oneDayAgo
     );
 
-    token.boostCount += 1;
+    token.boostCount = (token.boostCount || 0) + 1;
     token.lastBoostedIPs.push({ ip, date: now });
 
     if (token.boostCount >= 10000 && !token.featuredUntil) {
@@ -283,7 +289,9 @@ export const boostToken = async (req, res) => {
 
     await token.save();
     res.status(200).json({ message: 'Boost successful.', boostCount: token.boostCount });
+
   } catch (error) {
+    console.error("Boost error:", error); // <-- this will show you the true cause
     res.status(500).json({ error: 'Boost failed.' });
   }
 };
